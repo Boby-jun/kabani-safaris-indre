@@ -323,6 +323,38 @@
     color: var(--tan); background: var(--cream);
     padding: 5px 10px; white-space: nowrap; flex-shrink: 0;
   }
+  .serengeti-loop-card {
+    background: var(--white); padding: 36px 40px;
+    border-bottom: 3px solid transparent;
+    grid-column: 1 / -1;
+    display: flex; flex-direction: column;
+    transition: all 0.3s ease;
+  }
+  .serengeti-loop-card:hover {
+    border-bottom-color: var(--tan);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  }
+  .loop-camps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--cream-dark); padding-top: 24px; gap: 0;
+  }
+  .loop-camp {
+    padding: 0 32px;
+    border-right: 1px solid var(--cream-dark);
+  }
+  .loop-camp:first-child { padding-left: 0; }
+  .loop-camp:last-child { border-right: none; }
+  .loop-camp-num {
+    font-size: 8.5px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--tan); margin-bottom: 8px;
+  }
+  .loop-camp-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-weight: 500; color: var(--dark); margin-bottom: 4px;
+  }
+  .loop-camp-area {
+    font-size: 11px; font-weight: 300; color: #6A6A6A; line-height: 1.5;
+  }
 
   /* ── TOUR GUIDES ─────────────────────────────────────────────────────── */
   #guides {
@@ -835,7 +867,7 @@
           <div class="day-date-badge">Sat 19 Dec 2026</div>
         </div>
         <h3 class="day-title">Departure — Geneva to Kilimanjaro</h3>
-        <p class="day-desc">Evening departure from Geneva on Ethiopian Airlines (20:05). Overnight flight via Addis Ababa, arriving at Kilimanjaro International Airport the following morning.</p>
+        <p class="day-desc">Evening departure from Geneva on Ethiopian Airlines at 8:05pm. Overnight flight via Addis Ababa, arriving at Kilimanjaro International Airport the following morning.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
@@ -848,17 +880,17 @@
       <div class="day-card fade-up fade-up-delay-1">
         <div class="day-card-header">
           <div class="day-num-wrap">
-            <span class="day-location-tag">Moshi → Arusha</span>
+            <span class="day-location-tag">Kilimanjaro → Moshi</span>
             <span class="day-num">Day 02</span>
           </div>
           <div class="day-date-badge">Sun 20 Dec 2026</div>
         </div>
-        <h3 class="day-title">Arrival — Coffee Tour in Moshi</h3>
-        <p class="day-desc">Arrive at 10:45AM. Head to Moshi for a guided coffee plantation tour — from bean to cup. Evening transfer to Arusha for dinner and overnight.</p>
+        <h3 class="day-title">Arrival — Coffee Tour at Kilimanjaro Plantation</h3>
+        <p class="day-desc">Land at Kilimanjaro International Airport at 10:45am. Transfer to Moshi for a guided coffee tour at Kilimanjaro Plantation — from bean to cup. Evening at Aron's Farm to settle in before the adventure begins.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
-            Hotel in Arusha (TBC)
+            Aron's Farm
           </div>
           <span class="day-meals">L / D</span>
         </div>
@@ -867,131 +899,65 @@
       <div class="day-card fade-up fade-up-delay-2">
         <div class="day-card-header">
           <div class="day-num-wrap">
-            <span class="day-location-tag">Arusha → Serengeti</span>
+            <span class="day-location-tag">Arusha → Serengeti Gate</span>
             <span class="day-num">Day 03</span>
           </div>
           <div class="day-date-badge">Mon 21 Dec 2026</div>
         </div>
         <h3 class="day-title">Cultural Heritage Centre &amp; Drive to Serengeti</h3>
-        <p class="day-desc">Morning visit to the Cultural Heritage Centre in Arusha — East Africa's finest collection of art, jewellery and crafts. Packed lunch en route as you drive into Serengeti National Park.</p>
+        <p class="day-desc">Morning visit to the Cultural Heritage Centre in Arusha — East Africa's finest collection of art, jewellery and crafts. Packed lunch en route as you drive through the afternoon to the Serengeti Gate and on to camp.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
-            Serengeti Camp (TBC)
+            Africa Safari Serengeti Ndutu
           </div>
           <span class="day-meals">B / L / D</span>
         </div>
       </div>
 
-      <div class="day-card fade-up">
+      <div class="serengeti-loop-card fade-up">
         <div class="day-card-header">
           <div class="day-num-wrap">
-            <span class="day-location-tag">Serengeti</span>
-            <span class="day-num">Day 04</span>
+            <span class="day-location-tag">Serengeti · Days 04 – 08</span>
+            <span class="day-num">The Serengeti Loop</span>
           </div>
-          <div class="day-date-badge">Tue 22 Dec 2026</div>
+          <div class="day-date-badge">Dec 22 – 26, 2026  ·  5 nights</div>
         </div>
-        <h3 class="day-title">Serengeti — Into the Great Plains</h3>
-        <p class="day-desc">Game drives across the central Serengeti, pushing north toward the Mara River. Lions, cheetahs and elephants roam freely across one of Africa's most iconic landscapes.</p>
-        <div class="day-footer">
-          <div class="day-stay">
-            <strong>Stay</strong>
-            Serengeti Camp (TBC)
+        <h3 class="day-title">Five Days Across the Serengeti Ecosystem</h3>
+        <p class="day-desc">A moving camp through three distinct areas of the Serengeti — from the lake shores of Ndutu in the south to the great plains of the centre and the wild north. Daily game drives tracking predators and the great migration, with Christmas Eve and Christmas Day celebrated under an African sky.</p>
+        <div class="loop-camps">
+          <div class="loop-camp">
+            <div class="loop-camp-num">Camp 01 · Southern Serengeti</div>
+            <div class="loop-camp-name">Serengeti Ndutu Camp</div>
+            <div class="loop-camp-area">Lake Ndutu &middot; Beach &amp; plains setting</div>
           </div>
-          <span class="day-meals">B / L / D</span>
-        </div>
-      </div>
-
-      <div class="day-card fade-up fade-up-delay-1">
-        <div class="day-card-header">
-          <div class="day-num-wrap">
-            <span class="day-location-tag">Serengeti</span>
-            <span class="day-num">Day 05</span>
+          <div class="loop-camp">
+            <div class="loop-camp-num">Camp 02 · Central Serengeti</div>
+            <div class="loop-camp-name">Zawadi Tented Camp</div>
+            <div class="loop-camp-area">Seronera Valley &middot; Predator territory</div>
           </div>
-          <div class="day-date-badge">Wed 23 Dec 2026</div>
-        </div>
-        <h3 class="day-title">Serengeti — Wildlife Loop</h3>
-        <p class="day-desc">Morning and afternoon game drives through the northern Serengeti. Track predator activity along the Mara River corridor — prime territory for the great migration.</p>
-        <div class="day-footer">
-          <div class="day-stay">
-            <strong>Stay</strong>
-            Serengeti Camp (TBC)
+          <div class="loop-camp">
+            <div class="loop-camp-num">Camp 03 · Northern Serengeti</div>
+            <div class="loop-camp-name">Mawe Tented Camp</div>
+            <div class="loop-camp-area">Lobo Area &middot; Mara River corridor</div>
           </div>
-          <span class="day-meals">B / L / D</span>
         </div>
       </div>
 
       <div class="day-card fade-up fade-up-delay-2">
         <div class="day-card-header">
           <div class="day-num-wrap">
-            <span class="day-location-tag">Serengeti</span>
-            <span class="day-num">Day 06</span>
-          </div>
-          <div class="day-date-badge">Thu 24 Dec 2026</div>
-        </div>
-        <h3 class="day-title">Serengeti — Christmas Eve on the Plains</h3>
-        <p class="day-desc">Christmas Eve under the African sky. Morning game drive in the northern Serengeti, followed by a special dinner at camp beneath a canopy of stars.</p>
-        <div class="day-footer">
-          <div class="day-stay">
-            <strong>Stay</strong>
-            Serengeti Camp (TBC)
-          </div>
-          <span class="day-meals">B / L / D</span>
-        </div>
-      </div>
-
-      <div class="day-card fade-up">
-        <div class="day-card-header">
-          <div class="day-num-wrap">
-            <span class="day-location-tag">Serengeti</span>
-            <span class="day-num">Day 07</span>
-          </div>
-          <div class="day-date-badge">Fri 25 Dec 2026</div>
-        </div>
-        <h3 class="day-title">Serengeti — Christmas Day</h3>
-        <p class="day-desc">Christmas morning game drive along the Mara River — an unforgettable way to celebrate. Special Christmas lunch and dinner at camp on the Serengeti plains.</p>
-        <div class="day-footer">
-          <div class="day-stay">
-            <strong>Stay</strong>
-            Serengeti Camp (TBC)
-          </div>
-          <span class="day-meals">B / L / D</span>
-        </div>
-      </div>
-
-      <div class="day-card fade-up fade-up-delay-1">
-        <div class="day-card-header">
-          <div class="day-num-wrap">
-            <span class="day-location-tag">Serengeti</span>
-            <span class="day-num">Day 08</span>
-          </div>
-          <div class="day-date-badge">Sat 26 Dec 2026</div>
-        </div>
-        <h3 class="day-title">Serengeti — Final Loop</h3>
-        <p class="day-desc">Last full day in the Serengeti — morning and evening game drives across the central plains before heading south toward Ngorongoro tomorrow.</p>
-        <div class="day-footer">
-          <div class="day-stay">
-            <strong>Stay</strong>
-            Serengeti Camp (TBC)
-          </div>
-          <span class="day-meals">B / L / D</span>
-        </div>
-      </div>
-
-      <div class="day-card fade-up fade-up-delay-2">
-        <div class="day-card-header">
-          <div class="day-num-wrap">
-            <span class="day-location-tag">Ngorongoro</span>
+            <span class="day-location-tag">Serengeti → Ngorongoro</span>
             <span class="day-num">Day 09</span>
           </div>
           <div class="day-date-badge">Sun 27 Dec 2026</div>
         </div>
-        <h3 class="day-title">Drive to Ngorongoro</h3>
-        <p class="day-desc">Drive south from the Serengeti to the Ngorongoro Crater — the world's largest intact volcanic caldera. Arrive at your crater-rim lodge in time for sundowners and sweeping views.</p>
+        <h3 class="day-title">Drive to Ngorongoro — Safari Walk</h3>
+        <p class="day-desc">Morning drive south from the Serengeti to the Ngorongoro Crater — the world's largest intact volcanic caldera. Afternoon safari walk along the crater rim with a ranger guide. Settle in at camp with sweeping views over the crater floor.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
-            Ngorongoro Lodge (TBC)
+            Embalakai Ngorongoro Camp
           </div>
           <span class="day-meals">B / L / D</span>
         </div>
@@ -1005,12 +971,12 @@
           </div>
           <div class="day-date-badge">Mon 28 Dec 2026</div>
         </div>
-        <h3 class="day-title">Walking Safari &amp; Relax at the Crater</h3>
-        <p class="day-desc">Morning walking safari on the crater rim with a ranger guide. Return to the lodge for a relaxed afternoon taking in the views over the crater floor below.</p>
+        <h3 class="day-title">Full Day Safari — Ngorongoro Crater</h3>
+        <p class="day-desc">Full game drive inside the Ngorongoro Crater — lions, elephants, flamingos and black rhinos in a single remarkable bowl. One of Africa's most concentrated wildlife experiences.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
-            Ngorongoro Lodge (TBC)
+            Olea Farm Lodge
           </div>
           <span class="day-meals">B / L / D</span>
         </div>
@@ -1024,12 +990,12 @@
           </div>
           <div class="day-date-badge">Tue 29 Dec 2026</div>
         </div>
-        <h3 class="day-title">Ngorongoro Crater Safari &amp; Drive to Arusha</h3>
-        <p class="day-desc">Full game drive inside the Ngorongoro Crater — lions, elephants, flamingos and black rhinos in a single bowl. Late afternoon drive to Arusha ahead of tomorrow's flight to Kigali.</p>
+        <h3 class="day-title">Last Day in Tanzania — Drive to Arusha</h3>
+        <p class="day-desc">A final morning in the Ngorongoro highlands before the drive back to Arusha. Arrive in time to relax and prepare for tomorrow's flight to Kigali. Last night in Tanzania at Aron's Farm.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
-            Hotel in Arusha (TBC)
+            Aron's Farm
           </div>
           <span class="day-meals">B / L / D</span>
         </div>
@@ -1067,7 +1033,7 @@
           <div class="day-date-badge">Wed 30 Dec 2026</div>
         </div>
         <h3 class="day-title">Fly to Kigali, Rwanda</h3>
-        <p class="day-desc">Transfer to Arusha Airport for the 12:05 flight to Kigali, Rwanda. Arrive in the afternoon and check in to your hotel in the Rwandan capital. Evening at leisure before tomorrow's drive to Bwindi.</p>
+        <p class="day-desc">Transfer to Arusha Airport for the 12:05pm flight to Kigali, Rwanda. Arrive in the afternoon and check in to your hotel in the Rwandan capital. Evening at leisure before tomorrow's drive to Bwindi.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
@@ -1124,7 +1090,7 @@
           <div class="day-date-badge">Sat 02 Jan 2027</div>
         </div>
         <h3 class="day-title">Kigali &amp; International Departure</h3>
-        <p class="day-desc">A morning to explore Kigali — visit the Genocide Memorial or stroll through the city's markets and cafés. Transfer to the airport for your flight home departing at 17:40. Arrival in Geneva on Sunday 3rd January at 06:00. Thank you for travelling with Kabani Safaris.</p>
+        <p class="day-desc">A morning to explore Kigali — visit the Genocide Memorial or stroll through the city's markets and cafés. Transfer to the airport for your flight home departing at 5:40pm. Arrival in Geneva on Sunday 3rd January at 6:00am. Thank you for travelling with Kabani Safaris.</p>
         <div class="day-footer">
           <div class="day-stay">
             <strong>Stay</strong>
@@ -1267,7 +1233,7 @@
           <div class="incl-card-title">Not Included</div>
           <ul class="incl-list">
             <li>International flights &amp; visas (Tanzania, Rwanda, Uganda)</li>
-            <li>Arusha → Kigali regional flight (30 Dec, 12:05)</li>
+            <li>Arusha → Kigali regional flight 30 Dec, 12:05pm</li>
             <li>Travel &amp; medical insurance (mandatory)</li>
             <li>Personal expenses, drinks, laundry and tips beyond allowance</li>
             <li>Anything not specifically listed under "Included"</li>
