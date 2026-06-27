@@ -261,6 +261,7 @@
   }
 
   /* Day cards grid */
+  .days-section-wrap { padding: 0 60px; max-width: 1320px; margin: 0 auto; }
   .days-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 2px; margin-bottom: 80px;
@@ -636,7 +637,9 @@
     .hero-subtitle { margin-bottom: 0; }
     .hero-stats { flex-wrap: wrap; gap: 16px; }
     .hero-stat { border-left: none; padding-left: 0; }
-    .days-grid { grid-template-columns: 1fr; }
+    .days-section-wrap { padding: 0 24px; }
+    .days-grid { display: block; }
+    .day-card { width: 100%; box-sizing: border-box; margin-bottom: 2px; }
     .guides-grid { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
     .part-banner-content { padding: 28px; }
@@ -732,8 +735,8 @@
 
     /* Day cards */
     #itinerary { padding: 80px 0; }
+    .days-section-wrap { padding: 0 16px; }
     .days-grid { padding: 0 !important; }
-    div[style*="padding: 0 60px"] { padding: 0 16px !important; }
 
     /* Guide cards */
     .guides-grid { gap: 20px; }
@@ -856,7 +859,7 @@
     </p>
   </div>
 
-  <div style="padding: 0 60px; max-width:1320px; margin:0 auto;">
+  <div class="days-section-wrap">
     <div class="days-grid">
       <div class="day-card fade-up">
         <div class="day-card-header">
