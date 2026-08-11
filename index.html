@@ -977,6 +977,70 @@
   .booking-badge.confirmed { background: rgba(77,115,56,0.12); color: #4D7338; }
   .booking-badge.pending   { background: var(--cream); color: var(--tan); }
 
+
+  /* ── NEXT STEPS TABLE ──────────────────────────────────────────────── */
+  .next-steps-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(44,80,100,0.08);
+    margin-top: 32px;
+  }
+
+  .next-steps-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 24px;
+  }
+
+  .next-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .next-steps-grid { grid-template-columns: 1fr; }
+  }
+
+  .next-steps-group-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--navy);
+    border-bottom: 2px solid var(--cream-dark);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+
+  .next-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cream);
+    font-size: 13px;
+    color: var(--dark);
+    line-height: 1.4;
+  }
+
+  .next-step-item:last-child { border-bottom: none; }
+
+  .next-step-check {
+    width: 18px; height: 18px;
+    border: 2px solid var(--cream-dark);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .next-step-text strong { display: block; font-weight: 600; color: var(--navy-dark); font-size: 13px; }
+  .next-step-text span   { font-size: 11px; color: #888; line-height: 1.4; }
+
 </style>
 </head>
 <body>
@@ -1434,6 +1498,110 @@
 
       </div>
     </div>
+
+    <div class="next-steps-card fade-up">
+      <div class="next-steps-title">Next Steps — To-Do Before Travelling</div>
+      <div class="next-steps-grid">
+
+        <div>
+          <div class="next-steps-group-title">Visas &amp; Documents</div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Passport validity</strong>
+              <span>Valid at least 6 months beyond return date (Jan 2027)</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>East African Visa</strong>
+              <span>Obtained on arrival in Kigali — bring approx. USD 100 cash</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Travel insurance</strong>
+              <span>Mandatory — ensure cover includes medical &amp; trip cancellation</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>International flights</strong>
+              <span>Geneva ↔ Kigali — not included in the package</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="next-steps-group-title">Health &amp; Vaccinations</div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Yellow Fever vaccine</strong>
+              <span>Required to enter Uganda — certificate may be requested</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Malaria prophylaxis</strong>
+              <span>Consult your doctor — start medication before departure</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Hepatitis A &amp; Typhoid</strong>
+              <span>Recommended — check with your travel clinic</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Personal medication</strong>
+              <span>Bring sufficient supply for the full duration of the trip</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="next-steps-group-title">Practical Preparation</div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>USD cash</strong>
+              <span>Useful for tips, visa, and personal expenses</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Packing — clothing</strong>
+              <span>Neutral/khaki tones for game drives; warm layer for gorilla trek</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Power adaptor</strong>
+              <span>East Africa uses Type G sockets (same as UK)</span>
+            </div>
+          </div>
+          <div class="next-step-item">
+            <div class="next-step-check"></div>
+            <div class="next-step-text">
+              <strong>Balance payment</strong>
+              <span>CHF 3'075 due whenever you are ready — contact Rafael</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </section>
 
