@@ -2078,9 +2078,13 @@
     });
   }
 
-  /* ── unlock prompt ── */
+  /* ── unlock / lock prompt ── */
   function tryUnlock() {
-    if (isAdmin) return;
+    if (isAdmin) {
+      sessionStorage.removeItem('kabani_admin');
+      location.reload();
+      return;
+    }
     var pw = prompt('Admin password:');
     if (pw === PW) { enableAdmin(); }
     else if (pw !== null) { alert('Incorrect password.'); }
