@@ -1931,9 +1931,9 @@
     var bar = document.getElementById('pay-bar');
     if (bar) bar.style.width = pct + '%';
     var lbl = document.getElementById('pay-label');
-    if (lbl) lbl.textContent = chf(totalPaid) + " paid";
+    if (lbl) lbl.textContent = remaining === 0 ? 'Fully paid' : chf(remaining) + ' remaining';
     var pctEl = document.getElementById('pay-pct');
-    if (pctEl) pctEl.textContent = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '% paid';
 
     // Log
     var log = document.getElementById('pay-log');
