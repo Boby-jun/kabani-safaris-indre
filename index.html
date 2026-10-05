@@ -1942,12 +1942,15 @@
       entries.forEach(function(e) {
         var row = document.createElement('div');
         row.className = 'pay-entry';
+        var dateEl = isAdmin
+            ? '<input type="date" class="pay-date-edit" data-id="' + e.id + '" value="' + e.date + '" style="font-size:11px;color:#888;border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit;width:110px;">'
+            : '<span>' + e.date + '</span>';
         row.innerHTML =
           '<div class="pay-entry-left">' +
             '<div class="pay-entry-dot"></div>' +
             '<div class="pay-entry-info">' +
               '<strong>' + (e.note || 'Payment') + '</strong>' +
-              '<span>' + e.date + '</span>' +
+              dateEl +
             '</div>' +
           '</div>' +
           '<div class="pay-entry-right">' +
@@ -1955,6 +1958,16 @@
             '<button class="pay-entry-del" data-id="' + e.id + '" title="Remove">✕</button>' +
           '</div>';
         log.appendChild(row);
+      });
+
+      // Date edit
+      log.querySelectorAll('.pay-date-edit').forEach(function(input) {
+        input.addEventListener('change', function() {
+          var id = parseInt(input.dataset.id);
+          var entries = loadP();
+          var entry = entries.find(function(en) { return en.id === id; });
+          if (entry) { entry.date = input.value; saveP(entries); renderPayments(); }
+        });
       });
 
       // Delete buttons
