@@ -1768,7 +1768,7 @@
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Balance payment</strong>
-              <span>CHF 3'075 due whenever you are ready — contact Rafael</span>
+              <span id="todo-balance-text">CHF 3'075 due whenever you are ready — contact Rafael</span>
             </div>
           </div>
         </div>
@@ -1905,14 +1905,14 @@
       var raw = localStorage.getItem(PKEY);
       if (raw) return JSON.parse(raw);
     } catch(e) {}
-    // Default: first instalment of 3075 already paid
     var def = [{id: Date.now(), amount: 3075, note: "First instalment", date: "2026-08-25"}];
     try { localStorage.setItem(PKEY, JSON.stringify(def)); } catch(e) {}
     return def;
   }
   function saveP(s) { try { localStorage.setItem(PKEY, JSON.stringify(s)); } catch(e) {} }
 
-  var isAdmin = sessionStorage.getItem('kabani_admin') === '1';
+  var isAdminPay  = sessionStorage.getItem('kabani_admin_pay')  === '1';
+  var isAdminBook = sessionStorage.getItem('kabani_admin_book') === '1';
 
   /* ── format CHF ── */
   function chf(n) {
@@ -1927,24 +1927,22 @@
     var remaining = Math.max(0, TOTAL - totalPaid);
     var pct = Math.round(totalPaid / TOTAL * 100);
 
-    // Bar
-    var bar = document.getElementById('pay-bar');
-    if (bar) bar.style.width = pct + '%';
-    var lbl = document.getElementById('pay-label');
-    if (lbl) lbl.textContent = remaining === 0 ? 'Fully paid' : chf(remaining) + ' remaining';
+    var bar   = document.getElementById('pay-bar');
+    var lbl   = document.getElementById('pay-label');
     var pctEl = document.getElementById('pay-pct');
+    if (bar)   bar.style.width = pct + '%';
+    if (lbl)   lbl.textContent = remaining === 0 ? 'Fully paid' : chf(remaining) + ' remaining';
     if (pctEl) pctEl.textContent = pct + '% paid';
 
-    // Log
     var log = document.getElementById('pay-log');
     if (log) {
       log.innerHTML = '';
       entries.forEach(function(e) {
+        var dateEl = isAdminPay
+          ? '<input type="date" class="pay-date-edit" data-id="' + e.id + '" value="' + e.date + '" style="font-size:11px;color:#888;border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit;width:110px;">'
+          : '<span>' + e.date + '</span>';
         var row = document.createElement('div');
         row.className = 'pay-entry';
-        var dateEl = isAdmin
-            ? '<input type="date" class="pay-date-edit" data-id="' + e.id + '" value="' + e.date + '" style="font-size:11px;color:#888;border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit;width:110px;">'
-            : '<span>' + e.date + '</span>';
         row.innerHTML =
           '<div class="pay-entry-left">' +
             '<div class="pay-entry-dot"></div>' +
@@ -1955,12 +1953,11 @@
           '</div>' +
           '<div class="pay-entry-right">' +
             '<span class="pay-entry-amount">' + chf(e.amount) + '</span>' +
-            '<button class="pay-entry-del" data-id="' + e.id + '" title="Remove">✕</button>' +
+            '<button class="pay-entry-del" data-id="' + e.id + '" title="Remove" style="' + (isAdminPay ? '' : 'display:none') + '">✕</button>' +
           '</div>';
         log.appendChild(row);
       });
 
-      // Date edit
       log.querySelectorAll('.pay-date-edit').forEach(function(input) {
         input.addEventListener('change', function() {
           var id = parseInt(input.dataset.id);
@@ -1970,29 +1967,34 @@
         });
       });
 
-      // Delete buttons
       log.querySelectorAll('.pay-entry-del').forEach(function(btn) {
         btn.addEventListener('click', function(ev) {
           ev.stopPropagation();
           var id = parseInt(btn.dataset.id);
-          var updated = loadP().filter(function(e) { return e.id !== id; });
-          saveP(updated);
+          saveP(loadP().filter(function(e) { return e.id !== id; }));
           renderPayments();
         });
       });
     }
 
-    // Balance row
     var balRow  = document.getElementById('pay-balance-row');
     var balAmt  = document.getElementById('pay-balance-amt');
     var balNote = document.getElementById('pay-balance-note');
     if (balAmt)  balAmt.textContent = chf(remaining);
     if (remaining === 0) {
-      if (balRow)  { balRow.classList.add('settled'); }
+      if (balRow)  balRow.classList.add('settled');
       if (balNote) balNote.textContent = 'Fully paid — thank you!';
     } else {
-      if (balRow)  { balRow.classList.remove('settled'); }
+      if (balRow)  balRow.classList.remove('settled');
       if (balNote) balNote.textContent = 'Due by 11 Dec 2026';
+    }
+
+    // Sync to-do balance item
+    var todoBalance = document.getElementById('todo-balance-text');
+    if (todoBalance) {
+      todoBalance.textContent = remaining === 0
+        ? 'Fully paid — thank you!'
+        : chf(remaining) + ' due whenever you are ready — contact Rafael';
     }
   }
 
@@ -2011,23 +2013,17 @@
     }
   }
 
-  /* ── enable admin mode ── */
-  function enableAdmin() {
-    isAdmin = true;
-    sessionStorage.setItem('kabani_admin', '1');
+  /* ── enable payment admin ── */
+  function enablePayAdmin() {
+    isAdminPay = true;
+    sessionStorage.setItem('kabani_admin_pay', '1');
     document.body.classList.add('admin-active');
+    var lock = document.getElementById('pay-lock');
+    if (lock) { lock.textContent = '🔓'; lock.style.opacity = '1'; }
 
-    // Unlock both lock icons
-    ['booking-lock', 'pay-lock'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) { el.textContent = '🔓'; el.style.opacity = '1'; }
-    });
+    renderPayments();
 
-    // Show payment add button
-    var addWrap = document.getElementById('pay-add-wrap');
-    if (addWrap) addWrap.style.display = 'block';
-
-    // Wire payment add
+    var addWrap   = document.getElementById('pay-add-wrap');
     var addBtn    = document.getElementById('pay-add-btn');
     var addForm   = document.getElementById('pay-add-form');
     var cancelBtn = document.getElementById('pay-cancel-btn');
@@ -2035,17 +2031,14 @@
     var amtInput  = document.getElementById('pay-amount-input');
     var dateInput = document.getElementById('pay-date-input');
     var noteInput = document.getElementById('pay-note-input');
-    // Default date input to today
     if (dateInput) { var t = new Date(); dateInput.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
+    if (addWrap) addWrap.style.display = 'block';
 
     if (addBtn) addBtn.addEventListener('click', function() {
-      addForm.style.display = 'block';
-      addBtn.style.display  = 'none';
-      amtInput.focus();
+      addForm.style.display = 'block'; addBtn.style.display = 'none'; amtInput.focus();
     });
     if (cancelBtn) cancelBtn.addEventListener('click', function() {
-      addForm.style.display = 'none';
-      addBtn.style.display  = 'block';
+      addForm.style.display = 'none'; addBtn.style.display = 'block';
       amtInput.value = ''; noteInput.value = '';
     });
     if (submitBtn) submitBtn.addEventListener('click', function() {
@@ -2054,21 +2047,25 @@
       var dateStr = (dateInput && dateInput.value) ? dateInput.value : new Date().toISOString().slice(0,10);
       var entries = loadP();
       entries.push({ id: Date.now(), amount: amt, note: noteInput.value || 'Payment', date: dateStr });
-      saveP(entries);
-      renderPayments();
-      addForm.style.display = 'none';
-      addBtn.style.display  = 'block';
+      saveP(entries); renderPayments();
+      addForm.style.display = 'none'; addBtn.style.display = 'block';
       amtInput.value = ''; noteInput.value = '';
-      // Reset date to today for next entry
       if (dateInput) { var t = new Date(); dateInput.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
     });
-    // Allow Enter to submit
     if (amtInput) amtInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitBtn.click(); });
+  }
 
-    // Wire booking items
+  /* ── enable booking admin ── */
+  function enableBookAdmin() {
+    isAdminBook = true;
+    sessionStorage.setItem('kabani_admin_book', '1');
+    var lock = document.getElementById('booking-lock');
+    if (lock) { lock.textContent = '🔓'; lock.style.opacity = '1'; }
+
     var bstate = loadB();
     document.querySelectorAll('.booking-item[data-booking]').forEach(function(item) {
       var id = item.dataset.booking;
+      item.style.cursor = 'pointer';
       item.addEventListener('click', function() {
         var isPending = item.classList.contains('pending');
         applyBooking(item, !isPending);
@@ -2078,39 +2075,75 @@
     });
   }
 
-  /* ── unlock / lock prompt ── */
-  function tryUnlock() {
-    if (isAdmin) {
-      sessionStorage.removeItem('kabani_admin');
-      location.reload();
-      return;
+  /* ── inline password dialog ── */
+  var dialog   = document.getElementById('admin-dialog');
+  var pwInput  = document.getElementById('admin-pw-input');
+  var pwError  = document.getElementById('admin-pw-error');
+  var pwSubmit = document.getElementById('admin-pw-submit');
+  var pwCancel = document.getElementById('admin-pw-cancel');
+  var pendingTarget = null; // 'pay' or 'book'
+
+  function showDialog(target) {
+    pendingTarget = target;
+    dialog.style.display = 'flex';
+    pwInput.value = ''; pwError.style.display = 'none';
+    setTimeout(function() { pwInput.focus(); }, 50);
+  }
+  function hideDialog() { dialog.style.display = 'none'; pendingTarget = null; }
+  function trySubmit() {
+    if (pwInput.value === PW) {
+      hideDialog();
+      if (pendingTarget === 'pay')  enablePayAdmin();
+      if (pendingTarget === 'book') enableBookAdmin();
+    } else {
+      pwError.style.display = 'block'; pwInput.value = ''; pwInput.focus();
     }
-    var pw = prompt('Admin password:');
-    if (pw === PW) { enableAdmin(); }
-    else if (pw !== null) { alert('Incorrect password.'); }
   }
 
+  if (pwSubmit) pwSubmit.addEventListener('click', trySubmit);
+  if (pwCancel) pwCancel.addEventListener('click', hideDialog);
+  if (dialog)   dialog.addEventListener('click', function(e) { if (e.target === dialog) hideDialog(); });
+  if (pwInput)  pwInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') trySubmit(); });
+
+  /* ── lock icon click handlers ── */
+  var payLock  = document.getElementById('pay-lock');
+  var bookLock = document.getElementById('booking-lock');
+
+  if (payLock) payLock.addEventListener('click', function() {
+    if (isAdminPay) { sessionStorage.removeItem('kabani_admin_pay'); location.reload(); }
+    else showDialog('pay');
+  });
+  if (bookLock) bookLock.addEventListener('click', function() {
+    if (isAdminBook) { sessionStorage.removeItem('kabani_admin_book'); location.reload(); }
+    else showDialog('book');
+  });
+
   /* ── init ── */
-  // Restore booking states (visible to all)
   var bstate = loadB();
   document.querySelectorAll('.booking-item[data-booking]').forEach(function(item) {
     if (bstate[item.dataset.booking] === 'pending') applyBooking(item, true);
   });
-
-  // Render payment log (visible to all, delete buttons only shown in admin)
   renderPayments();
-
-  // Lock icons
-  ['booking-lock', 'pay-lock'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('click', tryUnlock);
-  });
-
-  // Auto-enable if already admin this session
-  if (isAdmin) enableAdmin();
+  if (isAdminPay)  enablePayAdmin();
+  if (isAdminBook) enableBookAdmin();
 
 })();
 </script>
+
+
+<!-- Admin password dialog -->
+<div id="admin-dialog" style="display:none;position:fixed;z-index:9999;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:24px 28px;width:280px;box-shadow:0 8px 40px rgba(0,0,0,0.18);font-family:inherit;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2C5064;margin-bottom:14px;">Admin Access</div>
+    <input id="admin-pw-input" type="password" placeholder="Password" autocomplete="off"
+      style="width:100%;padding:10px 12px;border:1.5px solid #DDD0BA;border-radius:8px;font-size:15px;box-sizing:border-box;font-family:inherit;outline:none;">
+    <div id="admin-pw-error" style="font-size:11px;color:#c0392b;margin-top:6px;display:none;">Incorrect password</div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="admin-pw-submit" style="flex:1;padding:9px;background:#1A3344;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Unlock</button>
+      <button id="admin-pw-cancel" style="padding:9px 14px;background:transparent;border:1.5px solid #DDD0BA;border-radius:8px;font-size:13px;cursor:pointer;color:#888;font-family:inherit;">Cancel</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
