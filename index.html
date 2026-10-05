@@ -1581,6 +1581,10 @@
                 <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Amount (CHF)</label>
                 <input id="pay-amount-input" type="number" min="1" placeholder="e.g. 1000" style="width:100%;padding:7px 10px;border:1px solid var(--cream-dark);border-radius:6px;font-size:14px;box-sizing:border-box;font-family:inherit;">
               </div>
+              <div style="flex:1;min-width:120px;">
+                <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Date</label>
+                <input id="pay-date-input" type="date" style="width:100%;padding:7px 10px;border:1px solid var(--cream-dark);border-radius:6px;font-size:14px;box-sizing:border-box;font-family:inherit;">
+              </div>
               <div style="flex:2;min-width:130px;">
                 <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Note (optional)</label>
                 <input id="pay-note-input" type="text" placeholder="e.g. Partial payment" style="width:100%;padding:7px 10px;border:1px solid var(--cream-dark);border-radius:6px;font-size:14px;box-sizing:border-box;font-family:inherit;">
@@ -2016,7 +2020,10 @@
     var cancelBtn = document.getElementById('pay-cancel-btn');
     var submitBtn = document.getElementById('pay-submit-btn');
     var amtInput  = document.getElementById('pay-amount-input');
+    var dateInput = document.getElementById('pay-date-input');
     var noteInput = document.getElementById('pay-note-input');
+    // Default date input to today
+    if (dateInput) { var t = new Date(); dateInput.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
 
     if (addBtn) addBtn.addEventListener('click', function() {
       addForm.style.display = 'block';
@@ -2031,10 +2038,7 @@
     if (submitBtn) submitBtn.addEventListener('click', function() {
       var amt = parseFloat(amtInput.value);
       if (!amt || amt <= 0) { amtInput.focus(); return; }
-      var today = new Date();
-      var dateStr = today.getFullYear() + '-' +
-        String(today.getMonth()+1).padStart(2,'0') + '-' +
-        String(today.getDate()).padStart(2,'0');
+      var dateStr = (dateInput && dateInput.value) ? dateInput.value : new Date().toISOString().slice(0,10);
       var entries = loadP();
       entries.push({ id: Date.now(), amount: amt, note: noteInput.value || 'Payment', date: dateStr });
       saveP(entries);
@@ -2042,6 +2046,8 @@
       addForm.style.display = 'none';
       addBtn.style.display  = 'block';
       amtInput.value = ''; noteInput.value = '';
+      // Reset date to today for next entry
+      if (dateInput) { var t = new Date(); dateInput.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
     });
     // Allow Enter to submit
     if (amtInput) amtInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitBtn.click(); });
