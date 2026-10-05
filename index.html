@@ -1041,6 +1041,77 @@
   .next-step-text strong { display: block; font-weight: 600; color: var(--navy-dark); font-size: 13px; }
   .next-step-text span   { font-size: 11px; color: #888; line-height: 1.4; }
 
+
+  /* ── INTERACTIVE TO-DO ──────────────────────────────────────────────── */
+  .next-step-item {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+
+  .next-step-item:hover .next-step-check {
+    border-color: var(--navy);
+  }
+
+  .next-step-item.done {
+    opacity: 0.55;
+  }
+
+  .next-step-item.done .next-step-check {
+    background: var(--green);
+    border-color: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .next-step-item.done .next-step-check::after {
+    content: '✓';
+  }
+
+  .next-step-item.done strong {
+    text-decoration: line-through;
+    color: #888;
+  }
+
+  .next-step-item.done span {
+    text-decoration: line-through;
+  }
+
+  .todo-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--dark-soft);
+  }
+
+  .todo-progress-bar-track {
+    flex: 1;
+    background: var(--cream);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .todo-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--green-dark));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .todo-progress-label {
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--green-dark);
+    min-width: 40px;
+    text-align: right;
+  }
+
 </style>
 </head>
 <body>
@@ -1501,32 +1572,36 @@
 
     <div class="next-steps-card fade-up">
       <div class="next-steps-title">Next Steps — To-Do Before Travelling</div>
+      <div class="todo-progress">
+        <div class="todo-progress-bar-track"><div class="todo-progress-bar-fill" id="todo-bar"></div></div>
+        <span class="todo-progress-label" id="todo-count">0 / 12</span>
+      </div>
       <div class="next-steps-grid">
 
         <div>
           <div class="next-steps-group-title">Visas &amp; Documents</div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="passport">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Passport validity</strong>
               <span>Valid at least 6 months beyond return date (Jan 2027)</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="visa">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>East African Visa</strong>
               <span>Obtained on arrival in Kigali — bring approx. USD 100 cash</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="insurance">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Travel insurance</strong>
               <span>Mandatory — ensure cover includes medical &amp; trip cancellation</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="flights">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>International flights</strong>
@@ -1537,28 +1612,28 @@
 
         <div>
           <div class="next-steps-group-title">Health &amp; Vaccinations</div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="yellowfever">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Yellow Fever vaccine</strong>
               <span>Required to enter Uganda — certificate may be requested</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="malaria">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Malaria</strong>
               <span>Check with Médecine Tropicale in Geneva</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="hepatitis">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Hepatitis A &amp; Typhoid</strong>
               <span>Recommended — check with your travel clinic</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="medication">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Personal medication</strong>
@@ -1569,28 +1644,28 @@
 
         <div>
           <div class="next-steps-group-title">Practical Preparation</div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="usd">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>USD cash</strong>
               <span>Useful for tips, visa, and personal expenses</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="packing">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Packing — clothing</strong>
               <span>Neutral/khaki tones for game drives; warm layer for gorilla trek</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="adaptor">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Power adaptor</strong>
               <span>East Africa uses Type G sockets (same as UK)</span>
             </div>
           </div>
-          <div class="next-step-item">
+          <div class="next-step-item" data-todo="balance">
             <div class="next-step-check"></div>
             <div class="next-step-text">
               <strong>Balance payment</strong>
@@ -1672,6 +1747,47 @@
         : 'rgba(255,255,255,0.82)';
     });
   });
+</script>
+
+
+<script>
+(function () {
+  var STORAGE_KEY = 'kabani_indre_todo';
+  var items = document.querySelectorAll('.next-step-item[data-todo]');
+  var bar   = document.getElementById('todo-bar');
+  var count = document.getElementById('todo-count');
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+
+  function save(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function updateProgress() {
+    var done = document.querySelectorAll('.next-step-item.done').length;
+    var total = items.length;
+    var pct = total ? Math.round(done / total * 100) : 0;
+    if (bar)   bar.style.width = pct + '%';
+    if (count) count.textContent = done + ' / ' + total;
+  }
+
+  // Restore saved state
+  var state = load();
+  items.forEach(function(item) {
+    var id = item.dataset.todo;
+    if (state[id]) item.classList.add('done');
+    item.addEventListener('click', function() {
+      item.classList.toggle('done');
+      state[id] = item.classList.contains('done');
+      save(state);
+      updateProgress();
+    });
+  });
+
+  updateProgress();
+})();
 </script>
 
 </body>
