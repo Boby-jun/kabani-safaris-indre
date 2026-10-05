@@ -1140,6 +1140,26 @@
     content: '';
   }
 
+
+  /* ── ADMIN INTERACTIVE ──────────────────────────────────────────────── */
+  .admin-active [data-payment] {
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .admin-active [data-payment]:hover {
+    filter: brightness(0.96);
+  }
+  .admin-active .booking-item[data-booking] {
+    cursor: pointer;
+  }
+  .payment-row.unpaid {
+    background: var(--cream) !important;
+    opacity: 0.5;
+  }
+  .payment-row.fully-paid {
+    background: rgba(77,115,56,0.08) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -1496,7 +1516,7 @@
 
         <div class="payment-bar-wrap">
           <div class="payment-bar-track">
-            <div class="payment-bar-fill"></div>
+            <div class="payment-bar-fill" id="pay-bar"></div>
           </div>
           <div class="payment-bar-labels">
             <span>CHF 3'075 paid</span>
@@ -1505,7 +1525,7 @@
         </div>
 
         <div class="payment-rows">
-          <div class="payment-row paid">
+          <div class="payment-row paid" data-payment="first">
             <div>
               <div class="payment-row-label">
                 <span class="dot dot-green"></span>
@@ -1515,7 +1535,7 @@
             </div>
             <div class="payment-row-amount">CHF 3'075</div>
           </div>
-          <div class="payment-row remaining">
+          <div class="payment-row remaining" data-payment="balance">
             <div>
               <div class="payment-row-label">
                 <span class="dot dot-navy"></span>
@@ -1530,7 +1550,7 @@
 
       <!-- Bookings tracker -->
       <div class="bookings-card fade-up fade-up-delay-2">
-        <div class="bookings-card-title">Bookings Tracker</div>
+        <div class="bookings-card-title" style="display:flex;align-items:center;justify-content:space-between;">Bookings Tracker <span id="booking-lock" title="Admin" style="cursor:pointer;font-size:13px;opacity:0.4;transition:opacity 0.2s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=this.dataset.unlocked?'1':'0.4'">🔒</span></div>
 
         <div class="booking-item" data-booking="gorilla">
           <div class="booking-status confirmed">✓</div>
@@ -1821,46 +1841,112 @@
 
 <script>
 (function () {
-  var BKEY = 'kabani_indre_bookings';
-  var items = document.querySelectorAll('.booking-item[data-booking]');
+  var PW    = 'kitesurf9';
+  var BKEY  = 'kabani_indre_bookings';
+  var PKEY  = 'kabani_indre_payments';
 
-  function loadB() {
-    try { return JSON.parse(localStorage.getItem(BKEY) || '{}'); } catch(e) { return {}; }
-  }
-  function saveB(state) {
-    try { localStorage.setItem(BKEY, JSON.stringify(state)); } catch(e) {}
+  /* ── helpers ── */
+  function loadB() { try { return JSON.parse(localStorage.getItem(BKEY) || '{}'); } catch(e) { return {}; } }
+  function saveB(s) { try { localStorage.setItem(BKEY, JSON.stringify(s)); } catch(e) {} }
+  function loadP() { try { return JSON.parse(localStorage.getItem(PKEY) || '{"first":true,"balance":false}'); } catch(e) { return {first:true,balance:false}; } }
+  function saveP(s) { try { localStorage.setItem(PKEY, JSON.stringify(s)); } catch(e) {} }
+
+  var isAdmin = sessionStorage.getItem('kabani_admin') === '1';
+
+  /* ── payment UI ── */
+  function updatePaymentUI(ps) {
+    var paid = (ps.first ? 3075 : 0) + (ps.balance ? 3075 : 0);
+    var pct  = Math.round(paid / 6150 * 100);
+    var bar  = document.getElementById('pay-bar');
+    var lbl  = document.getElementById('pay-label');
+    var pctEl= document.getElementById('pay-pct');
+    if (bar)  bar.style.width = pct + '%';
+    if (lbl)  lbl.textContent = "CHF " + (paid ? paid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'") : '0') + " paid";
+    if (pctEl) pctEl.textContent = pct + '%';
+
+    var firstRow   = document.querySelector('[data-payment="first"]');
+    var balanceRow = document.querySelector('[data-payment="balance"]');
+    if (firstRow) {
+      firstRow.classList.toggle('unpaid', !ps.first);
+      firstRow.querySelector('.dot').className = 'dot ' + (ps.first ? 'dot-green' : 'dot-navy');
+    }
+    if (balanceRow) {
+      balanceRow.classList.toggle('fully-paid', ps.balance);
+      balanceRow.classList.toggle('remaining', !ps.balance);
+    }
   }
 
-  function applyState(item, isPending) {
+  /* ── booking item state ── */
+  function applyBooking(item, isPending) {
     var status = item.querySelector('.booking-status');
     var badge  = item.querySelector('.booking-badge');
     if (isPending) {
       item.classList.add('pending');
-      status.classList.remove('confirmed'); status.classList.add('pending');
-      status.textContent = '○';
-      badge.classList.remove('confirmed'); badge.classList.add('pending');
-      badge.textContent = 'Pending';
+      status.classList.replace('confirmed','pending'); status.textContent = '○';
+      badge.classList.replace('confirmed','pending');  badge.textContent  = 'Pending';
     } else {
       item.classList.remove('pending');
-      status.classList.remove('pending'); status.classList.add('confirmed');
-      status.textContent = '✓';
-      badge.classList.remove('pending'); badge.classList.add('confirmed');
-      badge.textContent = 'Confirmed';
+      status.classList.replace('pending','confirmed'); status.textContent = '✓';
+      badge.classList.replace('pending','confirmed');  badge.textContent  = 'Confirmed';
     }
   }
 
-  var state = loadB();
-  items.forEach(function(item) {
-    var id = item.dataset.booking;
-    // Default is confirmed unless explicitly set to pending in storage
-    if (state[id] === 'pending') applyState(item, true);
-    item.addEventListener('click', function() {
-      var isPending = item.classList.contains('pending');
-      applyState(item, !isPending);
-      state[id] = isPending ? 'confirmed' : 'pending';
-      saveB(state);
+  /* ── enable admin mode ── */
+  function enableAdmin() {
+    isAdmin = true;
+    sessionStorage.setItem('kabani_admin', '1');
+    var lock = document.getElementById('booking-lock');
+    if (lock) { lock.textContent = '🔓'; lock.style.opacity = '1'; lock.dataset.unlocked = '1'; }
+    document.body.classList.add('admin-active');
+
+    // Wire payment rows
+    var ps = loadP();
+    document.querySelectorAll('[data-payment]').forEach(function(row) {
+      row.addEventListener('click', function() {
+        var key = row.dataset.payment; // 'first' or 'balance'
+        ps[key] = !ps[key];
+        saveP(ps);
+        updatePaymentUI(ps);
+      });
     });
+
+    // Wire booking items
+    var bstate = loadB();
+    document.querySelectorAll('.booking-item[data-booking]').forEach(function(item) {
+      var id = item.dataset.booking;
+      item.addEventListener('click', function() {
+        var isPending = item.classList.contains('pending');
+        applyBooking(item, !isPending);
+        bstate[id] = isPending ? 'confirmed' : 'pending';
+        saveB(bstate);
+      });
+    });
+  }
+
+  /* ── init ── */
+  // Restore booking states (visible to all)
+  var bstate = loadB();
+  document.querySelectorAll('.booking-item[data-booking]').forEach(function(item) {
+    if (bstate[item.dataset.booking] === 'pending') applyBooking(item, true);
   });
+
+  // Restore payment states (visible to all)
+  updatePaymentUI(loadP());
+
+  // Lock icon click → password prompt
+  var lock = document.getElementById('booking-lock');
+  if (lock) {
+    lock.addEventListener('click', function() {
+      if (isAdmin) return;
+      var pw = prompt('Admin password:');
+      if (pw === PW) { enableAdmin(); }
+      else if (pw !== null) { alert('Incorrect password.'); }
+    });
+  }
+
+  // Auto-enable if already admin this session
+  if (isAdmin) enableAdmin();
+
 })();
 </script>
 
