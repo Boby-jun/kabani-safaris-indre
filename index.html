@@ -1160,6 +1160,36 @@
     background: rgba(77,115,56,0.08) !important;
   }
 
+
+  /* ── PAYMENT LOG ENTRIES ────────────────────────────────────────────── */
+  .pay-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(77,115,56,0.07);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .pay-entry-left { display: flex; align-items: center; gap: 8px; }
+  .pay-entry-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .pay-entry-info strong { display: block; font-weight: 600; color: var(--navy-dark); font-size: 13px; }
+  .pay-entry-info span   { font-size: 11px; color: #888; }
+  .pay-entry-right { display: flex; align-items: center; gap: 10px; }
+  .pay-entry-amount { font-weight: 700; color: var(--navy-dark); }
+  .pay-entry-del {
+    font-size: 11px; color: #bbb; cursor: pointer; background: none;
+    border: none; padding: 2px 4px; border-radius: 4px; line-height: 1;
+    display: none;
+  }
+  .admin-active .pay-entry-del { display: inline; }
+  .admin-active .pay-entry-del:hover { color: #e55; }
+
+  #pay-balance-row.settled { background: rgba(77,115,56,0.07) !important; }
+  #pay-balance-row.settled .dot-navy { background: var(--green) !important; }
+
 </style>
 </head>
 <body>
@@ -1507,7 +1537,10 @@
 
       <!-- Payment status -->
       <div class="payment-card fade-up">
-        <div class="payment-card-title">Payment Summary</div>
+        <div class="payment-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          Payment Summary
+          <span id="pay-lock" title="Admin" style="cursor:pointer;font-size:13px;opacity:0.35;transition:opacity 0.2s;">🔒</span>
+        </div>
 
         <div class="payment-total">
           <span>Total</span>
@@ -1519,32 +1552,46 @@
             <div class="payment-bar-fill" id="pay-bar"></div>
           </div>
           <div class="payment-bar-labels">
-            <span>CHF 3'075 paid</span>
-            <span>50%</span>
+            <span id="pay-label">CHF 0 paid</span>
+            <span id="pay-pct">0%</span>
           </div>
         </div>
 
-        <div class="payment-rows">
-          <div class="payment-row paid" data-payment="first">
-            <div>
-              <div class="payment-row-label">
-                <span class="dot dot-green"></span>
-                First instalment paid
-              </div>
-              <div class="payment-row-note">50% of total</div>
+        <!-- Dynamic payment log rendered by JS -->
+        <div id="pay-log" class="payment-rows"></div>
+
+        <!-- Balance due row (always visible) -->
+        <div id="pay-balance-row" class="payment-row remaining">
+          <div>
+            <div class="payment-row-label">
+              <span class="dot dot-navy"></span>
+              Balance remaining
             </div>
-            <div class="payment-row-amount">CHF 3'075</div>
+            <div class="payment-row-note" id="pay-balance-note">Due by 11 Dec 2026</div>
           </div>
-          <div class="payment-row remaining" data-payment="balance">
-            <div>
-              <div class="payment-row-label">
-                <span class="dot dot-navy"></span>
-                Balance due — 14 days before departure
+          <div class="payment-row-amount" id="pay-balance-amt">CHF 6'150</div>
+        </div>
+
+        <!-- Admin: add payment form (hidden by default) -->
+        <div id="pay-add-wrap" style="display:none;margin-top:12px;">
+          <div id="pay-add-form" style="display:none;padding:14px;background:var(--cream);border-radius:10px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--navy);margin-bottom:10px;">Log a payment</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:90px;">
+                <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Amount (CHF)</label>
+                <input id="pay-amount-input" type="number" min="1" placeholder="e.g. 1000" style="width:100%;padding:7px 10px;border:1px solid var(--cream-dark);border-radius:6px;font-size:14px;box-sizing:border-box;font-family:inherit;">
               </div>
-              <div class="payment-row-note">50% of total · due by 11 Dec 2026</div>
+              <div style="flex:2;min-width:130px;">
+                <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Note (optional)</label>
+                <input id="pay-note-input" type="text" placeholder="e.g. Partial payment" style="width:100%;padding:7px 10px;border:1px solid var(--cream-dark);border-radius:6px;font-size:14px;box-sizing:border-box;font-family:inherit;">
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:6px;">
+                <button id="pay-submit-btn" style="padding:7px 14px;background:var(--navy-dark);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Add</button>
+                <button id="pay-cancel-btn" style="padding:7px 10px;background:transparent;border:1px solid var(--cream-dark);border-radius:6px;font-size:12px;cursor:pointer;color:#888;">✕</button>
+              </div>
             </div>
-            <div class="payment-row-amount">CHF 3'075</div>
           </div>
+          <button id="pay-add-btn" style="width:100%;padding:9px;background:transparent;border:1.5px dashed var(--cream-dark);border-radius:8px;font-size:12px;color:var(--tan);font-weight:600;cursor:pointer;letter-spacing:0.5px;">+ Log Payment</button>
         </div>
       </div>
 
@@ -1844,35 +1891,91 @@
   var PW    = 'kitesurf9';
   var BKEY  = 'kabani_indre_bookings';
   var PKEY  = 'kabani_indre_payments';
+  var TOTAL = 6150;
 
-  /* ── helpers ── */
+  /* ── storage ── */
   function loadB() { try { return JSON.parse(localStorage.getItem(BKEY) || '{}'); } catch(e) { return {}; } }
   function saveB(s) { try { localStorage.setItem(BKEY, JSON.stringify(s)); } catch(e) {} }
-  function loadP() { try { return JSON.parse(localStorage.getItem(PKEY) || '{"first":true,"balance":false}'); } catch(e) { return {first:true,balance:false}; } }
+  function loadP() {
+    try {
+      var raw = localStorage.getItem(PKEY);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    // Default: first instalment of 3075 already paid
+    var def = [{id: Date.now(), amount: 3075, note: "First instalment", date: "2026-08-25"}];
+    try { localStorage.setItem(PKEY, JSON.stringify(def)); } catch(e) {}
+    return def;
+  }
   function saveP(s) { try { localStorage.setItem(PKEY, JSON.stringify(s)); } catch(e) {} }
 
   var isAdmin = sessionStorage.getItem('kabani_admin') === '1';
 
+  /* ── format CHF ── */
+  function chf(n) {
+    return "CHF " + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  }
+
   /* ── payment UI ── */
-  function updatePaymentUI(ps) {
-    var paid = (ps.first ? 3075 : 0) + (ps.balance ? 3075 : 0);
-    var pct  = Math.round(paid / 6150 * 100);
-    var bar  = document.getElementById('pay-bar');
-    var lbl  = document.getElementById('pay-label');
-    var pctEl= document.getElementById('pay-pct');
-    if (bar)  bar.style.width = pct + '%';
-    if (lbl)  lbl.textContent = "CHF " + (paid ? paid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'") : '0') + " paid";
+  function renderPayments() {
+    var entries = loadP();
+    var totalPaid = entries.reduce(function(s, e) { return s + e.amount; }, 0);
+    if (totalPaid > TOTAL) totalPaid = TOTAL;
+    var remaining = Math.max(0, TOTAL - totalPaid);
+    var pct = Math.round(totalPaid / TOTAL * 100);
+
+    // Bar
+    var bar = document.getElementById('pay-bar');
+    if (bar) bar.style.width = pct + '%';
+    var lbl = document.getElementById('pay-label');
+    if (lbl) lbl.textContent = chf(totalPaid) + " paid";
+    var pctEl = document.getElementById('pay-pct');
     if (pctEl) pctEl.textContent = pct + '%';
 
-    var firstRow   = document.querySelector('[data-payment="first"]');
-    var balanceRow = document.querySelector('[data-payment="balance"]');
-    if (firstRow) {
-      firstRow.classList.toggle('unpaid', !ps.first);
-      firstRow.querySelector('.dot').className = 'dot ' + (ps.first ? 'dot-green' : 'dot-navy');
+    // Log
+    var log = document.getElementById('pay-log');
+    if (log) {
+      log.innerHTML = '';
+      entries.forEach(function(e) {
+        var row = document.createElement('div');
+        row.className = 'pay-entry';
+        row.innerHTML =
+          '<div class="pay-entry-left">' +
+            '<div class="pay-entry-dot"></div>' +
+            '<div class="pay-entry-info">' +
+              '<strong>' + (e.note || 'Payment') + '</strong>' +
+              '<span>' + e.date + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pay-entry-right">' +
+            '<span class="pay-entry-amount">' + chf(e.amount) + '</span>' +
+            '<button class="pay-entry-del" data-id="' + e.id + '" title="Remove">✕</button>' +
+          '</div>';
+        log.appendChild(row);
+      });
+
+      // Delete buttons
+      log.querySelectorAll('.pay-entry-del').forEach(function(btn) {
+        btn.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          var id = parseInt(btn.dataset.id);
+          var updated = loadP().filter(function(e) { return e.id !== id; });
+          saveP(updated);
+          renderPayments();
+        });
+      });
     }
-    if (balanceRow) {
-      balanceRow.classList.toggle('fully-paid', ps.balance);
-      balanceRow.classList.toggle('remaining', !ps.balance);
+
+    // Balance row
+    var balRow  = document.getElementById('pay-balance-row');
+    var balAmt  = document.getElementById('pay-balance-amt');
+    var balNote = document.getElementById('pay-balance-note');
+    if (balAmt)  balAmt.textContent = chf(remaining);
+    if (remaining === 0) {
+      if (balRow)  { balRow.classList.add('settled'); }
+      if (balNote) balNote.textContent = 'Fully paid — thank you!';
+    } else {
+      if (balRow)  { balRow.classList.remove('settled'); }
+      if (balNote) balNote.textContent = 'Due by 11 Dec 2026';
     }
   }
 
@@ -1882,12 +1985,12 @@
     var badge  = item.querySelector('.booking-badge');
     if (isPending) {
       item.classList.add('pending');
-      status.classList.replace('confirmed','pending'); status.textContent = '○';
-      badge.classList.replace('confirmed','pending');  badge.textContent  = 'Pending';
+      if (status) { status.className = 'booking-status pending'; status.textContent = '○'; }
+      if (badge)  { badge.className  = 'booking-badge pending';  badge.textContent  = 'Pending'; }
     } else {
       item.classList.remove('pending');
-      status.classList.replace('pending','confirmed'); status.textContent = '✓';
-      badge.classList.replace('pending','confirmed');  badge.textContent  = 'Confirmed';
+      if (status) { status.className = 'booking-status confirmed'; status.textContent = '✓'; }
+      if (badge)  { badge.className  = 'booking-badge confirmed';  badge.textContent  = 'Confirmed'; }
     }
   }
 
@@ -1895,20 +1998,53 @@
   function enableAdmin() {
     isAdmin = true;
     sessionStorage.setItem('kabani_admin', '1');
-    var lock = document.getElementById('booking-lock');
-    if (lock) { lock.textContent = '🔓'; lock.style.opacity = '1'; lock.dataset.unlocked = '1'; }
     document.body.classList.add('admin-active');
 
-    // Wire payment rows
-    var ps = loadP();
-    document.querySelectorAll('[data-payment]').forEach(function(row) {
-      row.addEventListener('click', function() {
-        var key = row.dataset.payment; // 'first' or 'balance'
-        ps[key] = !ps[key];
-        saveP(ps);
-        updatePaymentUI(ps);
-      });
+    // Unlock both lock icons
+    ['booking-lock', 'pay-lock'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.textContent = '🔓'; el.style.opacity = '1'; }
     });
+
+    // Show payment add button
+    var addWrap = document.getElementById('pay-add-wrap');
+    if (addWrap) addWrap.style.display = 'block';
+
+    // Wire payment add
+    var addBtn    = document.getElementById('pay-add-btn');
+    var addForm   = document.getElementById('pay-add-form');
+    var cancelBtn = document.getElementById('pay-cancel-btn');
+    var submitBtn = document.getElementById('pay-submit-btn');
+    var amtInput  = document.getElementById('pay-amount-input');
+    var noteInput = document.getElementById('pay-note-input');
+
+    if (addBtn) addBtn.addEventListener('click', function() {
+      addForm.style.display = 'block';
+      addBtn.style.display  = 'none';
+      amtInput.focus();
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', function() {
+      addForm.style.display = 'none';
+      addBtn.style.display  = 'block';
+      amtInput.value = ''; noteInput.value = '';
+    });
+    if (submitBtn) submitBtn.addEventListener('click', function() {
+      var amt = parseFloat(amtInput.value);
+      if (!amt || amt <= 0) { amtInput.focus(); return; }
+      var today = new Date();
+      var dateStr = today.getFullYear() + '-' +
+        String(today.getMonth()+1).padStart(2,'0') + '-' +
+        String(today.getDate()).padStart(2,'0');
+      var entries = loadP();
+      entries.push({ id: Date.now(), amount: amt, note: noteInput.value || 'Payment', date: dateStr });
+      saveP(entries);
+      renderPayments();
+      addForm.style.display = 'none';
+      addBtn.style.display  = 'block';
+      amtInput.value = ''; noteInput.value = '';
+    });
+    // Allow Enter to submit
+    if (amtInput) amtInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitBtn.click(); });
 
     // Wire booking items
     var bstate = loadB();
@@ -1923,6 +2059,14 @@
     });
   }
 
+  /* ── unlock prompt ── */
+  function tryUnlock() {
+    if (isAdmin) return;
+    var pw = prompt('Admin password:');
+    if (pw === PW) { enableAdmin(); }
+    else if (pw !== null) { alert('Incorrect password.'); }
+  }
+
   /* ── init ── */
   // Restore booking states (visible to all)
   var bstate = loadB();
@@ -1930,19 +2074,14 @@
     if (bstate[item.dataset.booking] === 'pending') applyBooking(item, true);
   });
 
-  // Restore payment states (visible to all)
-  updatePaymentUI(loadP());
+  // Render payment log (visible to all, delete buttons only shown in admin)
+  renderPayments();
 
-  // Lock icon click → password prompt
-  var lock = document.getElementById('booking-lock');
-  if (lock) {
-    lock.addEventListener('click', function() {
-      if (isAdmin) return;
-      var pw = prompt('Admin password:');
-      if (pw === PW) { enableAdmin(); }
-      else if (pw !== null) { alert('Incorrect password.'); }
-    });
-  }
+  // Lock icons
+  ['booking-lock', 'pay-lock'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', tryUnlock);
+  });
 
   // Auto-enable if already admin this session
   if (isAdmin) enableAdmin();
