@@ -1112,6 +1112,34 @@
     text-align: right;
   }
 
+
+  /* ── INTERACTIVE BOOKINGS TRACKER ──────────────────────────────────── */
+  .booking-item[data-booking] {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+
+  .booking-item[data-booking]:hover {
+    background: var(--cream);
+    border-radius: 8px;
+  }
+
+  .booking-item[data-booking].pending .booking-status {
+    background: var(--cream);
+    color: var(--tan);
+    font-size: 10px;
+  }
+
+  .booking-item[data-booking].pending .booking-badge {
+    background: var(--cream);
+    color: var(--tan);
+  }
+
+  .booking-item[data-booking].pending .booking-badge::before {
+    content: '';
+  }
+
 </style>
 </head>
 <body>
@@ -1504,7 +1532,7 @@
       <div class="bookings-card fade-up fade-up-delay-2">
         <div class="bookings-card-title">Bookings Tracker</div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="gorilla">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Gorilla Trekking Permit</strong>
@@ -1513,7 +1541,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="chimps">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Chimpanzee Trekking Permit</strong>
@@ -1522,7 +1550,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="akagera">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Akagera Rhino Lodge</strong>
@@ -1531,7 +1559,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="bushlodge">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Bush Lodge</strong>
@@ -1540,7 +1568,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="mutanda">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Lake Mutanda Resort</strong>
@@ -1549,7 +1577,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="eagleview">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Eagle View Lodge</strong>
@@ -1558,7 +1586,7 @@
           <span class="booking-badge confirmed">Confirmed</span>
         </div>
 
-        <div class="booking-item">
+        <div class="booking-item" data-booking="guide">
           <div class="booking-status confirmed">✓</div>
           <div class="booking-label">
             <strong>Guide &amp; Private Transport</strong>
@@ -1787,6 +1815,52 @@
   });
 
   updateProgress();
+})();
+</script>
+
+
+<script>
+(function () {
+  var BKEY = 'kabani_indre_bookings';
+  var items = document.querySelectorAll('.booking-item[data-booking]');
+
+  function loadB() {
+    try { return JSON.parse(localStorage.getItem(BKEY) || '{}'); } catch(e) { return {}; }
+  }
+  function saveB(state) {
+    try { localStorage.setItem(BKEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function applyState(item, isPending) {
+    var status = item.querySelector('.booking-status');
+    var badge  = item.querySelector('.booking-badge');
+    if (isPending) {
+      item.classList.add('pending');
+      status.classList.remove('confirmed'); status.classList.add('pending');
+      status.textContent = '○';
+      badge.classList.remove('confirmed'); badge.classList.add('pending');
+      badge.textContent = 'Pending';
+    } else {
+      item.classList.remove('pending');
+      status.classList.remove('pending'); status.classList.add('confirmed');
+      status.textContent = '✓';
+      badge.classList.remove('pending'); badge.classList.add('confirmed');
+      badge.textContent = 'Confirmed';
+    }
+  }
+
+  var state = loadB();
+  items.forEach(function(item) {
+    var id = item.dataset.booking;
+    // Default is confirmed unless explicitly set to pending in storage
+    if (state[id] === 'pending') applyState(item, true);
+    item.addEventListener('click', function() {
+      var isPending = item.classList.contains('pending');
+      applyState(item, !isPending);
+      state[id] = isPending ? 'confirmed' : 'pending';
+      saveB(state);
+    });
+  });
 })();
 </script>
 
