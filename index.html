@@ -1216,9 +1216,62 @@
     .esim-divider-v { width:40px; height:1px; background:linear-gradient(to right,transparent,rgba(196,145,90,.4),transparent); }
   }
 
+
+  /* ── SYNC BANNER & SHARE BUTTON ── */
+  #sync-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: var(--navy-dark); color: #fff;
+    padding: 13px 24px;
+    font-family: Montserrat, sans-serif; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    transform: translateY(-120%);
+    transition: transform 0.38s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+  #sync-banner.visible { transform: translateY(0); }
+  #sync-banner strong { color: var(--tan-light); }
+  #sync-banner .sync-dismiss { cursor: pointer; opacity: 0.4; margin-left: 8px; transition: opacity .2s; font-size: 15px; }
+  #sync-banner .sync-dismiss:hover { opacity: 1; }
+  .share-state-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent;
+    border: 1px solid var(--cream-dark); color: var(--tan);
+    border-radius: 20px; padding: 5px 13px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+    cursor: pointer; font-family: Montserrat, sans-serif;
+    transition: all 0.2s; margin-top: 10px;
+  }
+  .share-state-btn:hover { background: var(--cream); border-color: var(--tan); }
+  .share-state-btn.copied { color: #4d7338; border-color: #4d7338; }
+
 </style>
 </head>
 <body>
+<div id="sync-banner"></div>
+<script>
+/* Kabani sync — early import: runs before payment/todo scripts so localStorage is fresh */
+(function () {
+  var raw = new URLSearchParams(location.search).get('sync');
+  if (!raw) return;
+  try {
+    var data = JSON.parse(decodeURIComponent(atob(raw)));
+    if (!data || !data.v) return;
+    if (Array.isArray(data.payments))
+      localStorage.setItem('kabani_indre_payments', JSON.stringify(data.payments));
+    if (data.bookings && typeof data.bookings === 'object')
+      localStorage.setItem('kabani_indre_bookings', JSON.stringify(data.bookings));
+    if (data.todos && typeof data.todos === 'object') {
+      var local = JSON.parse(localStorage.getItem('kabani_indre_todo') || '{}');
+      var merged = Object.assign({}, data.todos);
+      Object.keys(local).forEach(function (k) { if (local[k]) merged[k] = true; });
+      localStorage.setItem('kabani_indre_todo', JSON.stringify(merged));
+    }
+    sessionStorage.setItem('_kabani_sync', JSON.stringify({ role: data.role, ts: data.ts }));
+    history.replaceState(null, '', location.pathname);
+    location.reload();
+  } catch (e) {}
+})();
+</script>
 
 <!-- ── NAVBAR ─────────────────────────────────────────────────────────────── -->
 <nav id="navbar">
@@ -1624,6 +1677,9 @@
           </div>
           <button id="pay-add-btn" style="width:100%;padding:9px;background:transparent;border:1.5px dashed var(--cream-dark);border-radius:8px;font-size:12px;color:var(--tan);font-weight:600;cursor:pointer;letter-spacing:0.5px;">+ Log Payment</button>
         </div>
+      <div style="text-align:right;padding:10px 2px 0;">
+        <button class="share-state-btn" onclick="shareState(this)">&#x2197; Copy sync link</button>
+      </div>
       </div>
 
       <!-- Bookings tracker -->
@@ -1801,6 +1857,9 @@
         </div>
 
       </div>
+    <div style="text-align:right;padding:8px 4px 0;">
+      <button class="share-state-btn" onclick="shareState(this)">&#x2197; Copy sync link</button>
+    </div>
     </div>
 
   </div>
@@ -2217,5 +2276,65 @@
   </div>
 </div>
 
+
+<script>
+/* Kabani sync — banner + export */
+(function () {
+  /* Show banner if page was just refreshed after a sync import */
+  var bd = sessionStorage.getItem('_kabani_sync');
+  if (bd) {
+    sessionStorage.removeItem('_kabani_sync');
+    try {
+      bd = JSON.parse(bd);
+      var role = bd.role === 'kabani' ? 'Kabani Safaris' : 'Indré';
+      var banner = document.getElementById('sync-banner');
+      if (banner) {
+        banner.innerHTML =
+          '<span>&#x2713; Synced from <strong>' + role + '</strong>' +
+          (bd.ts ? ' &mdash; ' + bd.ts : '') + '</span>' +
+          '<span class="sync-dismiss" onclick="document.getElementById('sync-banner').classList.remove('visible')">&#x2715;</span>';
+        banner.classList.add('visible');
+        setTimeout(function () { banner.classList.remove('visible'); }, 9000);
+      }
+    } catch (e) {}
+  }
+
+  /* Export: build state URL and copy to clipboard */
+  window.shareState = function (btn) {
+    try {
+      var state = {
+        v: 2,
+        ts: new Date().toISOString().slice(0, 10),
+        role: sessionStorage.getItem('kabani_admin_pay') === '1' ? 'kabani' : 'indre',
+        payments: JSON.parse(localStorage.getItem('kabani_indre_payments') || '[]'),
+        bookings: JSON.parse(localStorage.getItem('kabani_indre_bookings') || '{}'),
+        todos:    JSON.parse(localStorage.getItem('kabani_indre_todo')     || '{}')
+      };
+      /* encodeURIComponent makes it ASCII-safe for btoa */
+      var encoded = btoa(encodeURIComponent(JSON.stringify(state)));
+      var url = location.origin + location.pathname + '?sync=' + encoded;
+
+      var done = function () {
+        if (!btn) return;
+        var orig = btn.textContent;
+        btn.textContent = '\u2713 Copied!';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = orig; btn.classList.remove('copied'); }, 2600);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () { prompt('Copy this link:', url); });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      }
+    } catch (e) { alert('Sync error: ' + e.message); }
+  };
+})();
+</script>
 </body>
 </html>
