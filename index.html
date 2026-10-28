@@ -1249,11 +1249,11 @@
 <body>
 <div id="sync-banner"></div>
 <script>
-/* Kabani sync — early import (Firebase + URL fallback) */
+/* Kabani sync — early import. Separate Firebase paths: admin owns payments/bookings, client owns todos. */
 (function () {
   var DB = 'https://kabani-indre-default-rtdb.europe-west1.firebasedatabase.app';
 
-  /* ── URL share-link sync (manual fallback) ── */
+  /* ── URL share-link (manual fallback, kept for offline use) ── */
   var raw = new URLSearchParams(location.search).get('sync');
   if (raw) {
     try {
@@ -1272,39 +1272,47 @@
         sessionStorage.setItem('_kabani_sync', JSON.stringify({ role: data.role, ts: data.ts }));
         history.replaceState(null, '', location.pathname);
         location.reload();
-        return; /* Firebase check happens after reload */
+        return;
       }
     } catch (e) {}
   }
 
-  /* ── Firebase sync on every page load ── */
-  fetch(DB + '/indre/state.json')
-    .then(function (r) { return r.json(); })
-    .then(function (remote) {
-      if (!remote || !remote.ts) return;
-      var localTs = localStorage.getItem('_fb_ts') || '0';
-      if (String(remote.ts) <= localTs) return; /* nothing new */
+  /* ── Firebase sync: fetch admin + client paths in parallel ── */
+  var adminTs  = localStorage.getItem('_fb_admin_ts')  || '0';
+  var clientTs = localStorage.getItem('_fb_client_ts') || '0';
 
-      /* payments: remote wins if it has at least as many entries */
-      if (Array.isArray(remote.payments)) {
-        var lp = JSON.parse(localStorage.getItem('kabani_indre_payments') || '[]');
-        if (remote.payments.length >= lp.length)
-          localStorage.setItem('kabani_indre_payments', JSON.stringify(remote.payments));
-      }
-      /* bookings: remote always wins */
-      if (remote.bookings && typeof remote.bookings === 'object')
-        localStorage.setItem('kabani_indre_bookings', JSON.stringify(remote.bookings));
-      /* todos: union — anything ticked on either side stays ticked */
-      if (remote.todos && typeof remote.todos === 'object') {
+  Promise.all([
+    fetch(DB + '/indre/admin.json').then(function (r) { return r.json(); }).catch(function () { return null; }),
+    fetch(DB + '/indre/client.json').then(function (r) { return r.json(); }).catch(function () { return null; })
+  ]).then(function (results) {
+    var admin  = results[0];
+    var client = results[1];
+    var changed = false;
+
+    /* Admin data: payments + bookings — admin is sole writer, always wins */
+    if (admin && admin.ts && String(admin.ts) > adminTs) {
+      if (Array.isArray(admin.payments))
+        localStorage.setItem('kabani_indre_payments', JSON.stringify(admin.payments));
+      if (admin.bookings && typeof admin.bookings === 'object')
+        localStorage.setItem('kabani_indre_bookings', JSON.stringify(admin.bookings));
+      localStorage.setItem('_fb_admin_ts', String(admin.ts));
+      changed = true;
+    }
+
+    /* Client data: todos — union with local so neither side loses ticks */
+    if (client && client.ts && String(client.ts) > clientTs) {
+      if (client.todos && typeof client.todos === 'object') {
         var lt = JSON.parse(localStorage.getItem('kabani_indre_todo') || '{}');
-        var mt = Object.assign({}, remote.todos);
+        var mt = Object.assign({}, client.todos);
         Object.keys(lt).forEach(function (k) { if (lt[k]) mt[k] = true; });
         localStorage.setItem('kabani_indre_todo', JSON.stringify(mt));
       }
-      localStorage.setItem('_fb_ts', String(remote.ts));
-      location.reload();
-    })
-    .catch(function () { /* Firebase unreachable — continue with local data */ });
+      localStorage.setItem('_fb_client_ts', String(client.ts));
+      changed = true;
+    }
+
+    if (changed) location.reload();
+  });
 })();
 </script>
 
@@ -2330,41 +2338,49 @@
   }
 
   /* Export: build state URL and copy to clipboard */
-  /* ── Firebase push: write on any relevant localStorage change ── */
+  /* ── Firebase push: separate paths for admin (payments/bookings) and client (todos) ── */
   var _DB = 'https://kabani-indre-default-rtdb.europe-west1.firebasedatabase.app';
-  var _pushTimer = null;
+  var _adminTimer  = null;
+  var _clientTimer = null;
 
-  function pushToFirebase() {
+  function pushAdmin() {
     var ts = Date.now();
     var s = {
-      ts: ts,
+      ts:       ts,
       payments: JSON.parse(localStorage.getItem('kabani_indre_payments') || '[]'),
-      bookings: JSON.parse(localStorage.getItem('kabani_indre_bookings') || '{}'),
-      todos:    JSON.parse(localStorage.getItem('kabani_indre_todo')     || '{}')
+      bookings: JSON.parse(localStorage.getItem('kabani_indre_bookings') || '{}')
     };
-    fetch(_DB + '/indre/state.json', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(s)
-    }).then(function () {
-      localStorage.setItem('_fb_ts', String(ts));
-    }).catch(function () {});
+    fetch(_DB + '/indre/admin.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s)
+    }).then(function () { localStorage.setItem('_fb_admin_ts', String(ts)); }).catch(function () {});
   }
 
-  /* Wrap localStorage.setItem so any save triggers a debounced Firebase push */
+  function pushClient() {
+    var ts = Date.now();
+    var s = {
+      ts:    ts,
+      todos: JSON.parse(localStorage.getItem('kabani_indre_todo') || '{}')
+    };
+    fetch(_DB + '/indre/client.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s)
+    }).then(function () { localStorage.setItem('_fb_client_ts', String(ts)); }).catch(function () {});
+  }
+
+  /* Wrap localStorage.setItem: route each key to the right Firebase path */
   var _origSet = localStorage.setItem.bind(localStorage);
   localStorage.setItem = function (key, value) {
     _origSet(key, value);
-    if (key === 'kabani_indre_payments' ||
-        key === 'kabani_indre_todo' ||
-        key === 'kabani_indre_bookings') {
-      clearTimeout(_pushTimer);
-      _pushTimer = setTimeout(pushToFirebase, 800);
+    if (key === 'kabani_indre_payments' || key === 'kabani_indre_bookings') {
+      clearTimeout(_adminTimer);
+      _adminTimer = setTimeout(pushAdmin, 800);
+    } else if (key === 'kabani_indre_todo') {
+      clearTimeout(_clientTimer);
+      _clientTimer = setTimeout(pushClient, 800);
     }
   };
 
-  /* Also push on initial load so Firebase always has the latest local state */
-  setTimeout(pushToFirebase, 2000);
+  /* Push current local state on load (2 s delay to let page settle) */
+  setTimeout(function () { pushAdmin(); pushClient(); }, 2000);
 
   window.shareState = function (btn) {
     try {
