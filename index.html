@@ -2074,7 +2074,7 @@
       var raw = localStorage.getItem(PKEY);
       if (raw) return JSON.parse(raw);
     } catch(e) {}
-    var def = [{id: Date.now(), amount: 3075, note: "First instalment", date: "2026-08-25"}];
+    var def = [{id:1722,amount:3075,note:"First instalment",date:"2026-08-07"},{id:1727,amount:1025,note:"Second instalment",date:"2026-10-01"},{id:1730,amount:1025,note:"Third instalment",date:"2026-11-02"}];
     try { localStorage.setItem(PKEY, JSON.stringify(def)); } catch(e) {}
     return def;
   }
